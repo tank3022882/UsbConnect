@@ -1,0 +1,36 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion rootProject.androidCompileSdkVersion
+    buildToolsVersion rootProject.androidBuildToolsVersion
+    defaultConfig {
+        applicationId ANDROID_BUILD_APPLICATIONID
+        minSdkVersion Integer.parseInt(ANDROID_BUILD_MIN_SDK_VERSION)
+        targetSdkVersion Integer.parseInt(ANDROID_BUILD_TARGET_SDK_VERSION)
+        versionCode Integer.parseInt(VERSION_CODE)
+        versionName VERSION_NAME
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    def dependencies = rootProject.ext.dependencies
+    testCompile dependencies["junit"]
+    compile dependencies["appcompat_v7"]
+    compile dependencies["design"]
+    compile dependencies["cardview_v7"]
+    compile dependencies["butterknife"]
+    compile dependencies["otto"]
+    compile dependencies["logger"]
+}
