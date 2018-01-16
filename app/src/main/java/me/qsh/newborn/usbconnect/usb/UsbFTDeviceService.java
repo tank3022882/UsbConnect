@@ -51,7 +51,7 @@ public class UsbFTDeviceService extends Service {
     private FT_Device mDevice;
 
     private ReadThread readThread;
-    private boolean readThreadGoing = false;
+    private volatile boolean readThreadGoing = false;
 
     private final BroadcastReceiver mDetachedReceiver = new BroadcastReceiver() {
         @Override

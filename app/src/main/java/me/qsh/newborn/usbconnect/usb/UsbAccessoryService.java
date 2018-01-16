@@ -62,7 +62,7 @@ public class UsbAccessoryService extends Service {
     private FileOutputStream mOutputstream;
 
     private ReadThread readThread;
-    private boolean readThreadGoing = false;
+    private volatile boolean readThreadGoing = false;
 
     private final BroadcastReceiver mDetachedReceiver = new BroadcastReceiver() {
         @Override
