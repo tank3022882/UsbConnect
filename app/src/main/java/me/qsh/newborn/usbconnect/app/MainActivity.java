@@ -22,7 +22,7 @@ import me.qsh.newborn.usbconnect.base.BaseActivity;
 import me.qsh.newborn.usbconnect.base.usb.UsbControl;
 import me.qsh.newborn.usbconnect.base.usb.UsbTypeControl;
 import me.qsh.newborn.usbconnect.otto.EventData;
-import me.qsh.newborn.usbconnect.otto.OttoProvider;
+import me.qsh.newborn.usbconnect.otto.MainThreadBus;
 import me.qsh.newborn.usbconnect.usb.UsbAccessoryService;
 import me.qsh.newborn.usbconnect.usb.UsbFTDeviceService;
 
@@ -61,7 +61,7 @@ public class MainActivity extends BaseActivity implements UsbTypeControl, Naviga
         super.init(savedInstanceState);
         this.mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
-        OttoProvider.getInstance().register(this);
+        MainThreadBus.getInstance().register(this);
         initIntent(getIntent());
 
         setSupportActionBar(mToolbar);
@@ -141,7 +141,7 @@ public class MainActivity extends BaseActivity implements UsbTypeControl, Naviga
     protected void onDestroy() {
         UsbFTDeviceService.exitService(this);
         UsbAccessoryService.exitService(this);
-        OttoProvider.getInstance().unregister(this);
+        MainThreadBus.getInstance().unregister(this);
         super.onDestroy();
     }
 

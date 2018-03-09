@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbManager;
-import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
@@ -16,7 +15,7 @@ import com.orhanobut.logger.Logger;
 
 import me.qsh.newborn.usbconnect.base.usb.UsbTypeControl;
 import me.qsh.newborn.usbconnect.otto.EventData;
-import me.qsh.newborn.usbconnect.otto.OttoProvider;
+import me.qsh.newborn.usbconnect.otto.MainThreadBus;
 import me.qsh.newborn.usbconnect.utils.ByteUtils;
 
 /**
@@ -175,9 +174,9 @@ public class UsbFTDeviceService extends Service {
         Logger.d(str);
         if (isOpen()) {
             int length = mDevice.write(data);
-            OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_WRITE_SUCCESS, length));
+            MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_WRITE_SUCCESS, length));
         } else {
-            OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_WRITE_FAIL, "write fail: accessory not open"));
+            MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_WRITE_FAIL, "write fail: accessory not open"));
         }
     }
 
@@ -200,13 +199,13 @@ public class UsbFTDeviceService extends Service {
                     readThread = new ReadThread();
                     readThread.start();
                 }
-                OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT, UsbTypeControl.TYPE_USB_FTDEVICE));
+                MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT, UsbTypeControl.TYPE_USB_FTDEVICE));
             } else {
-                OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT_FAIL, "open fail"));
+                MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT_FAIL, "open fail"));
                 stopSelf();
             }
         } else {
-            OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT_FAIL, "open fail: device is null"));
+            MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT_FAIL, "open fail: device is null"));
             stopSelf();
         }
     }
@@ -229,25 +228,11 @@ public class UsbFTDeviceService extends Service {
             }
         }
 
-        OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_DISCONNECT));
+        MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_DISCONNECT));
     }
 
     private void receiveData(byte[] data) {
-        new ReadTask().execute(data);
-    }
-
-    private class ReadTask extends AsyncTask<byte[], Void, byte[]> {
-
-        @Override
-        protected byte[] doInBackground(byte[]... bytes) {
-            return bytes[0];
-        }
-
-        @Override
-        protected void onPostExecute(byte[] bytes) {
-            OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_RECEIVE, bytes));
-        }
-
+        MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_RECEIVE, data));
     }
 
     private final class ReadThread extends Thread {

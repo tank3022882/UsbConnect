@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbManager;
-import android.os.AsyncTask;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.Parcelable;
@@ -23,7 +22,7 @@ import java.io.IOException;
 
 import me.qsh.newborn.usbconnect.base.usb.UsbTypeControl;
 import me.qsh.newborn.usbconnect.otto.EventData;
-import me.qsh.newborn.usbconnect.otto.OttoProvider;
+import me.qsh.newborn.usbconnect.otto.MainThreadBus;
 import me.qsh.newborn.usbconnect.utils.ByteUtils;
 import me.qsh.newborn.usbconnect.utils.IOUtil;
 
@@ -216,9 +215,9 @@ public class UsbAccessoryService extends Service {
                 if (length > 0) {
                     mOutputstream.write(data, 0, length);
                 }
-                OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_WRITE_SUCCESS, length));
+                MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_WRITE_SUCCESS, length));
             } else {
-                OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_WRITE_FAIL, "write fail: accessory not open"));
+                MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_WRITE_FAIL, "write fail: accessory not open"));
             }
         } catch (IOException e) {
             Logger.e(e, "writeData()");
@@ -241,14 +240,14 @@ public class UsbAccessoryService extends Service {
                         readThread = new ReadThread();
                         readThread.start();
                     }
-                    OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT, UsbTypeControl.TYPE_USB_ACCESSORY));
+                    MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT, UsbTypeControl.TYPE_USB_ACCESSORY));
                 }
             } else {
-                OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT_FAIL, "open fail"));
+                MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT_FAIL, "open fail"));
                 stopSelf();
             }
         } else {
-            OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT_FAIL, "open fail: accessory is null"));
+            MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_CONNECT_FAIL, "open fail: accessory is null"));
             stopSelf();
         }
     }
@@ -270,25 +269,11 @@ public class UsbAccessoryService extends Service {
         mInputstream = null;
         mOutputstream = null;
 
-        OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_DISCONNECT));
+        MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_DISCONNECT));
     }
 
     private void receiveData(byte[] data) {
-        new ReadTask().execute(data);
-    }
-
-    private class ReadTask extends AsyncTask<byte[], Void, byte[]> {
-
-        @Override
-        protected byte[] doInBackground(byte[]... bytes) {
-            return bytes[0];
-        }
-
-        @Override
-        protected void onPostExecute(byte[] bytes) {
-            OttoProvider.getInstance().post(new EventData(EventData.EVENT_USB_RECEIVE, bytes));
-        }
-
+        MainThreadBus.getInstance().post(new EventData(EventData.EVENT_USB_RECEIVE, data));
     }
 
     private final class ReadThread extends Thread {
